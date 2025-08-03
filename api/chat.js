@@ -1,7 +1,7 @@
 export const config = {
   runtime: 'edge',
 };
-
+// nafa
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 function corsHeaders() {
