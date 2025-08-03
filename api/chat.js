@@ -4,9 +4,27 @@ export const config = {
 
 const OPENROUTER_API_KEY = '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';
 
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*', // ← pode restringir depois
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  };
+}
+
 export default async function handler(req) {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders()
+    });
+  }
+
   if (req.method !== 'POST') {
-    return new Response(JSON.stringify({ error: 'Método não permitido' }), { status: 405 });
+    return new Response(JSON.stringify({ error: 'Método não permitido' }), {
+      status: 405,
+      headers: corsHeaders()
+    });
   }
 
   try {
@@ -43,7 +61,10 @@ export default async function handler(req) {
 
     if (!res.ok) {
       const errData = await res.json();
-      return new Response(JSON.stringify({ error: errData.message || 'Erro desconhecido' }), { status: res.status });
+      return new Response(JSON.stringify({ error: errData.message || 'Erro desconhecido' }), {
+        status: res.status,
+        headers: corsHeaders()
+      });
     }
 
     const data = await res.json();
@@ -55,9 +76,15 @@ export default async function handler(req) {
         usage: data.usage,
         id: data.id,
       }
-    }), { status: 200 });
+    }), {
+      status: 200,
+      headers: corsHeaders()
+    });
 
   } catch (e) {
-    return new Response(JSON.stringify({ error: 'Erro interno: ' + e.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: 'Erro interno: ' + e.message }), {
+      status: 500,
+      headers: corsHeaders()
+    });
   }
 }
