@@ -8,9 +8,10 @@ function corsHeaders() {
   return {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': '*', // Permite todos os headers
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Title, HTTP-Referer',
   };
 }
+
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
