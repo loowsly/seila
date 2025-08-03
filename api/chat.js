@@ -1,8 +1,8 @@
 export const config = {
-  runtime: 'edge',
+  runtime: 'nodejs',
 };
 
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 function corsHeaders() {
   return {
@@ -12,9 +12,7 @@ function corsHeaders() {
   };
 }
 
-
-
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -55,21 +53,21 @@ export default async function handler(req) {
       ];
     }
 
-    const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const resFetch = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
     });
 
-    if (!res.ok) {
-      const errData = await res.json();
+    if (!resFetch.ok) {
+      const errData = await resFetch.json();
       return new Response(JSON.stringify({ error: errData.message || 'Erro desconhecido' }), {
-        status: res.status,
+        status: resFetch.status,
         headers: corsHeaders()
       });
     }
 
-    const data = await res.json();
+    const data = await resFetch.json();
     return new Response(JSON.stringify({
       response: data.choices?.[0]?.message?.content ?? null,
       model: data.model,
