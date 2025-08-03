@@ -6,11 +6,12 @@ const OPENROUTER_API_KEY = 'sk-or-v1-c9070b14e68ccd3207c83baad501077819ee915262d
 
 function corsHeaders() {
   return {
-    'Access-Control-Allow-Origin': '*', // ← pode restringir depois
+    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, request-id',
   };
 }
+
 
 export default async function handler(req) {
   if (req.method === 'OPTIONS') {
