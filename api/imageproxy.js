@@ -1,32 +1,30 @@
-export const config = { runtime: 'edge' };
+// Não use runtime: 'edge' pois Tesseract.js precisa de Node.js
+import Tesseract from 'tesseract.js';
 
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const imageUrl = searchParams.get('url');
+export default async function handler(req, res) {
+  const { url } = req.query;
 
-  if (!imageUrl) {
-    return new Response('Missing url parameter', { status: 400 });
+  if (!url) {
+    return res.status(400).json({ error: 'Missing url parameter' });
   }
 
   try {
-    const res = await fetch(imageUrl);
+    const imageRes = await fetch(url);
 
-    if (!res.ok) {
-      return new Response('Failed to fetch image', { status: 502 });
+    if (!imageRes.ok) {
+      return res.status(502).json({ error: 'Failed to fetch image' });
     }
 
-    const contentType = res.headers.get('content-type') || 'application/octet-stream';
-    const body = await res.arrayBuffer();
+    const arrayBuffer = await imageRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    return new Response(body, {
-      status: 200,
-      headers: {
-        'Content-Type': contentType,
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 'public, max-age=86400',
-      }
+    const result = await Tesseract.recognize(buffer, 'eng', {
+      logger: m => console.log(m), // logs progress (opcional)
     });
+
+    return res.status(200).json({ text: result.data.text });
   } catch (err) {
-    return new Response('Error fetching image', { status: 500 });
+    console.error('OCR error:', err);
+    return res.status(500).json({ error: 'OCR failed' });
   }
 }
