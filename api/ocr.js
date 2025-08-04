@@ -1,4 +1,3 @@
-// Não use runtime: 'edge' pois Tesseract.js precisa de Node.js
 import Tesseract from 'tesseract.js';
 
 export default async function handler(req, res) {
@@ -10,16 +9,13 @@ export default async function handler(req, res) {
 
   try {
     const imageRes = await fetch(url);
-
-    if (!imageRes.ok) {
-      return res.status(502).json({ error: 'Failed to fetch image' });
-    }
+    if (!imageRes.ok) return res.status(502).json({ error: 'Failed to fetch image' });
 
     const arrayBuffer = await imageRes.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     const result = await Tesseract.recognize(buffer, 'eng', {
-      logger: m => console.log(m), // logs progress (opcional)
+      logger: m => console.log(m),
     });
 
     return res.status(200).json({ text: result.data.text });
@@ -28,3 +24,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'OCR failed' });
   }
 }
+
+export const config = {
+  runtime: 'nodejs', // NÃO usar edge aqui
+};
