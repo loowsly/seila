@@ -1,38 +1,65 @@
 import Tesseract from 'tesseract.js';
 
-export const config = { runtime: 'nodejs' };
+export const config = {
+  runtime: 'nodejs', // Node.js porque Tesseract precisa de ambiente Node
+};
 
 export default async function handler(req, res) {
-  // CORS manual:
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
+  // Responder preflight CORS OPTIONS
   if (req.method === 'OPTIONS') {
-    return res.status(204).end();
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization, request-id',
+      },
+    });
   }
 
+  // Só aceitar GET
   if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Método não permitido' });
+    return new Response(JSON.stringify({ error: 'Método não permitido' }), {
+      status: 405,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    });
   }
 
-  const url = req.query.url;
-  if (!url) return res.status(400).json({ error: 'Missing url parameter' });
+  const { searchParams } = new URL(req.url);
+  const url = searchParams.get('url');
+
+  if (!url) {
+    return new Response(JSON.stringify({ error: 'Missing url parameter' }), {
+      status: 400,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    });
+  }
 
   try {
     const imageRes = await fetch(url);
-    if (!imageRes.ok) return res.status(502).json({ error: 'Failed to fetch image' });
+    if (!imageRes.ok) {
+      return new Response(JSON.stringify({ error: 'Failed to fetch image' }), {
+        status: 502,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+      });
+    }
 
     const arrayBuffer = await imageRes.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
     const result = await Tesseract.recognize(buffer, 'eng', {
-      logger: (m) => console.log(m),
+      logger: m => console.log(m),
     });
 
-    return res.status(200).json({ text: result.data.text });
+    return new Response(JSON.stringify({ text: result.data.text }), {
+      status: 200,
+      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
+    });
   } catch (err) {
     console.error('OCR error:', err);
-    return res.status(500).json({ error: 'OCR failed' });
+    return new Response(JSON.stringify({ error: 'OCR failed' }), {
+      status: 500,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+    });
   }
 }
