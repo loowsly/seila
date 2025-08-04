@@ -1,11 +1,8 @@
 import Tesseract from 'tesseract.js';
 
-export const config = {
-  runtime: 'nodejs', // Node.js porque Tesseract precisa de ambiente Node
-};
+export const config = { runtime: 'nodejs' };
 
 export default async function handler(req, res) {
-  // Responder preflight CORS OPTIONS
   if (req.method === 'OPTIONS') {
     return new Response(null, {
       status: 204,
@@ -17,7 +14,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // Só aceitar GET
   if (req.method !== 'GET') {
     return new Response(JSON.stringify({ error: 'Método não permitido' }), {
       status: 405,
@@ -35,8 +31,11 @@ export default async function handler(req, res) {
     });
   }
 
+  console.log('OCR handler iniciado para URL:', url);
+
   try {
     const imageRes = await fetch(url);
+    console.log('Status fetch imagem:', imageRes.status);
     if (!imageRes.ok) {
       return new Response(JSON.stringify({ error: 'Failed to fetch image' }), {
         status: 502,
@@ -48,15 +47,17 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(arrayBuffer);
 
     const result = await Tesseract.recognize(buffer, 'eng', {
-      logger: m => console.log(m),
+      logger: m => console.log('Tesseract:', m),
     });
+
+    console.log('Texto OCR:', result.data.text);
 
     return new Response(JSON.stringify({ text: result.data.text }), {
       status: 200,
       headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('OCR error:', err);
+    console.error('Erro OCR:', err);
     return new Response(JSON.stringify({ error: 'OCR failed' }), {
       status: 500,
       headers: { 'Access-Control-Allow-Origin': '*' },
