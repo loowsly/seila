@@ -1,0 +1,8 @@
+{
+  "name": "ocr-vercel",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "tesseract.js": "^4.1.1"
+  }
+}
