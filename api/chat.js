@@ -1,7 +1,5 @@
-export const config = {
-  runtime: 'edge',
-};
-// nafa
+export const config = { runtime: 'edge' };
+
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 
 function corsHeaders() {
@@ -12,22 +10,18 @@ function corsHeaders() {
   };
 }
 
-
-
-
 export default async function handler(req) {
   if (req.method === 'OPTIONS') {
-  return new Response(null, {
-    status: 204,
-    headers: corsHeaders(),  // <-- use aqui o mesmo corsHeaders()
-  });
-}
-
+    return new Response(null, {
+      status: 204,
+      headers: corsHeaders(),
+    });
+  }
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Método não permitido' }), {
       status: 405,
-      headers: corsHeaders()
+      headers: corsHeaders(),
     });
   }
 
@@ -49,11 +43,9 @@ export default async function handler(req) {
     if (imageUrl) {
       body.tools = [
         {
-          type: "vision",
-          input: {
-            image_url: imageUrl,
-          }
-        }
+          type: 'vision',
+          input: { image_url: imageUrl },
+        },
       ];
     }
 
@@ -67,28 +59,27 @@ export default async function handler(req) {
       const errData = await resFetch.json();
       return new Response(JSON.stringify({ error: errData.message || 'Erro desconhecido' }), {
         status: resFetch.status,
-        headers: corsHeaders()
+        headers: corsHeaders(),
       });
     }
 
     const data = await resFetch.json();
-    return new Response(JSON.stringify({
-      response: data.choices?.[0]?.message?.content ?? null,
-      model: data.model,
-      source: 'openrouter',
-      details: {
-        usage: data.usage,
-        id: data.id,
+    return new Response(
+      JSON.stringify({
+        response: data.choices?.[0]?.message?.content ?? null,
+        model: data.model,
+        source: 'openrouter',
+        details: { usage: data.usage, id: data.id },
+      }),
+      {
+        status: 200,
+        headers: corsHeaders(),
       }
-    }), {
-      status: 200,
-      headers: corsHeaders()
-    });
-
+    );
   } catch (e) {
     return new Response(JSON.stringify({ error: 'Erro interno: ' + e.message }), {
       status: 500,
-      headers: corsHeaders()
+      headers: corsHeaders(),
     });
   }
 }

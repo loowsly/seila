@@ -1,11 +1,23 @@
 import Tesseract from 'tesseract.js';
 
-export default async function handler(req, res) {
-  const { url } = req.query;
+export const config = { runtime: 'nodejs' };
 
-  if (!url) {
-    return res.status(400).json({ error: 'Missing url parameter' });
+export default async function handler(req, res) {
+  // CORS manual:
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
   }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Método não permitido' });
+  }
+
+  const url = req.query.url;
+  if (!url) return res.status(400).json({ error: 'Missing url parameter' });
 
   try {
     const imageRes = await fetch(url);
@@ -15,7 +27,7 @@ export default async function handler(req, res) {
     const buffer = Buffer.from(arrayBuffer);
 
     const result = await Tesseract.recognize(buffer, 'eng', {
-      logger: m => console.log(m),
+      logger: (m) => console.log(m),
     });
 
     return res.status(200).json({ text: result.data.text });
@@ -24,7 +36,3 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'OCR failed' });
   }
 }
-
-export const config = {
-  runtime: 'nodejs', // NÃO usar edge aqui
-};
